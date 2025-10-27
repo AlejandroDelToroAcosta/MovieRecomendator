@@ -2,16 +2,17 @@ package org.tscd.model;
 
 import java.util.List;
 
-public class Film {
+public class Movie {
     private String id;
     private String title;
     private int year;
     private List<Actor> cast;
     private List<Director> directors;
     private List<String> genre;
-    private float rating;
+    private double rating;
+    private int duration;
 
-    public Film(String id, String title, int year, List<Actor> cast, List<Director> directors, List<String> genre, float rating) {
+    public Movie(String id, String title, int year, List<Actor> cast, List<Director> directors, List<String> genre, double rating, int duration) {
         this.id = id;
         this.title = title;
         this.year = year;
@@ -19,10 +20,19 @@ public class Film {
         this.directors = directors;
         this.genre = genre;
         this.rating = rating;
+        this.duration = duration;
     }
 
     public String getId() {
         return id;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
     }
 
     public void setId(String id) {
@@ -69,17 +79,17 @@ public class Film {
         this.genre = genre;
     }
 
-    public float getRating() {
+    public double getRating() {
         return rating;
     }
 
-    public void setRating(float rating) {
+    public void setRating(double rating) {
         this.rating = rating;
     }
 
     @Override
     public String toString() {
-        return "Film{" +
+        return "Movie{" +
                 "id='" + id + '\'' +
                 ", title='" + title + '\'' +
                 ", year=" + year +
@@ -87,6 +97,7 @@ public class Film {
                 ", directors=" + directors +
                 ", genre=" + genre +
                 ", rating=" + rating +
+                ", duration=" + duration +
                 '}';
     }
 }
