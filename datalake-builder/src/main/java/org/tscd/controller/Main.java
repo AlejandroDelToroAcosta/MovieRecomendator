@@ -4,6 +4,7 @@ import org.tscd.datalake.DatalakeBuilder;
 import org.tscd.model.Movie;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 
 public class Main {
@@ -12,7 +13,8 @@ public class Main {
         List<String> titleIds = filmProvider.getMovieId();
         List<Movie> movieList = filmProvider.getMovieList(titleIds);
         DatalakeBuilder datalakeBuilder = new DatalakeBuilder();
-        datalakeBuilder.write(movieList, "C:\\Users\\aadel\\Desktop\\GCID\\Cuarto\\Primer Cuatrimestre\\TSCD\\Trabajo\\film-recomendator\\datalake\\movies.csv");
+        datalakeBuilder.write(movieList);
+        //datalakeBuilder.createBucket("tscdff2-bucket", "us-east-1");
 
         System.out.println(movieList);
     }

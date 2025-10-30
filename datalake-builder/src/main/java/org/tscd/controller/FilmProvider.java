@@ -43,9 +43,8 @@ public class FilmProvider {
     public List<Movie> getMovieList(List<String> movieIds) throws IOException {
         List<Movie> movieList = new ArrayList<>();
 
-        for (String movieId : movieIds) {
 
-            String newUrl = "https://api.imdbapi.dev/titles/" + movieId;
+            String newUrl = "https://api.imdbapi.dev/titles/" + "tt0054215";
             String json = HTTPClient.get(newUrl);
             Gson gson = new Gson();
             JsonObject jsonObject = gson.fromJson(json, JsonObject.class);
@@ -84,9 +83,9 @@ public class FilmProvider {
             int seconds = getSafeInt(jsonObject, "runtimeSeconds");
 
 
-            Movie movie = new Movie(movieId, title, year, actorsList, directorsList, genres, rating, seconds);
+            Movie movie = new Movie("tt0054215", title, year, actorsList, directorsList, genres, rating, seconds);
             movieList.add(movie);
-        }
+
         return movieList;
     }
 }
