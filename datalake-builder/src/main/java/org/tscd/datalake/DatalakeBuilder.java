@@ -1,6 +1,8 @@
 package org.tscd.datalake;
 
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.tscd.model.Movie;
@@ -22,36 +24,25 @@ public class DatalakeBuilder {
     }
 
     public String write(List<Movie> movieList) {
+
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
         String localDirPath = "datalake/" + timestamp;
-        String filePath = localDirPath + "/movies.csv";
+        String filePath = localDirPath + "/movies.json";
 
         try {
             Files.createDirectories(new File(localDirPath).toPath());
-            try (
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(filePath));
-                    CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT
-                            .withHeader("ID", "Title", "Year", "Cast", "Directors", "Genre", "Rating", "Duration"))
-            ) {
-                for (Movie movie : movieList) {
-                    csvPrinter.printRecord(
-                            movie.getId(),
-                            movie.getTitle(),
-                            movie.getYear(),
-                            movie.getCast(),
-                            movie.getDirectors(),
-                            movie.getGenre(),
-                            movie.getRating(),
-                            movie.getDuration()
-                    );
-                }
-                csvPrinter.flush();
-                System.out.println("Archivo CSV guardado localmente en: " + filePath);
-            }
+
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            String jsonContent = gson.toJson(movieList);
+
+            Files.writeString(new File(filePath).toPath(), jsonContent);
+
+            System.out.println("Archivo JSON guardado localmente en: " + filePath);
 
         } catch (IOException e) {
-            System.err.println("Error de E/S al escribir el CSV: " + e.getMessage());
+            System.err.println("Error al escribir JSON: " + e.getMessage());
         }
+
         return filePath;
     }
 

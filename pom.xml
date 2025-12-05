@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>datalake-builder</module>
-        <module>datamart-builder</module>
+        <module>graph-builder-2</module>
     </modules>
 
     <properties>
