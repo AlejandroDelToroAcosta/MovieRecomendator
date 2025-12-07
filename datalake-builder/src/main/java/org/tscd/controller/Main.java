@@ -19,8 +19,9 @@ public class Main {
 
         DatalakeBuilder datalakeBuilder = new DatalakeBuilder(storageProvider);
 
-        datalakeBuilder.cloudStorage("C:\\Users\\aadel\\Desktop\\GCID\\Cuarto\\Primer Cuatrimestre\\TSCD\\Trabajo\\film-recomendator\\datalake\\2025-11-29_12-24-39\\movies.json");
-        datalakeBuilder.write(movieList);
+        String filepath = datalakeBuilder.write(movieList);
+        datalakeBuilder.cloudStorage(filepath);
+
 
         System.out.println(movieList);
     }
