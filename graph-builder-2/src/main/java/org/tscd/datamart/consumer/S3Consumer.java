@@ -1,4 +1,4 @@
-package org.tscd.datamart.service;
+package org.tscd.datamart.consumer;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.tscd.datamart.model.Movie;

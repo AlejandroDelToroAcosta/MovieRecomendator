@@ -1,4 +1,4 @@
-package org.tscd.datamart.service;
+package org.tscd.datamart.consumer;
 
 import org.tscd.datamart.model.Movie;
 

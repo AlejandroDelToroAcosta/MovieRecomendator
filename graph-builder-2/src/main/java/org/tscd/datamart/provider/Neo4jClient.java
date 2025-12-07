@@ -1,23 +1,16 @@
-package org.tscd.datamart.service;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+package org.tscd.datamart.provider;
 
 import org.neo4j.driver.*;
 import org.tscd.datamart.model.Movie;
 import org.tscd.datamart.model.Person;
 
 
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
 
-public class Neo4jClient implements AutoCloseable {
+public class Neo4jClient implements AutoCloseable, InsertionService {
 
     private final Driver driver;
 
@@ -30,18 +23,15 @@ public class Neo4jClient implements AutoCloseable {
 
     public void writeMovies(List<Movie> movies) {
 
-        // 1. CONVERSIÓN CRÍTICA: Mapear List<Movie> a List<Map<String, Object>>
         List<Map<String, Object>> movieMaps = movies.stream()
                 .map(this::movieToMap)
-                .toList(); // Usamos .toList() si estás en Java 21, o .collect(Collectors.toList())
+                .toList();
 
         try (Session session = driver.session()) {
 
-            // 2. Prepara los parámetros: Ahora pasamos la lista de Maps.
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("movies", movieMaps); // <-- ¡Usamos movieMaps!
 
-            // 3. Ejecuta la transacción (el resto del código Cypher UNWIND sigue igual)
             session.writeTransaction(tx -> {
                 tx.run(CREATE_MOVIE_GRAPH_QUERY, parameters);
                 return null;
@@ -56,14 +46,9 @@ public class Neo4jClient implements AutoCloseable {
     }
 
 
-    /**
-     * Método auxiliar para convertir un objeto Movie en un Map de clave-valor.
-     * Esto asegura que el Driver de Neo4j pueda interpretar correctamente el objeto.
-     */
     private Map<String, Object> movieToMap(Movie movie) {
         Map<String, Object> map = new HashMap<>();
 
-        // Propiedades de Movie
         map.put("id", movie.getId());
         map.put("title", movie.getTitle());
         map.put("year", movie.getYear());
@@ -71,19 +56,13 @@ public class Neo4jClient implements AutoCloseable {
         map.put("duration", movie.getDuration());
         map.put("genre", movie.getGenres());
 
-        // Conversión de listas anidadas (Cast y Directors)
-        // Asume que Person ya tiene un método para convertir a Map si es necesario,
-        // o que sus propiedades son simples (String) que el driver puede manejar.
         map.put("cast", movie.getCast().stream().map(this::personToMap).toList());
         map.put("directors", movie.getDirectors().stream().map(this::personToMap).toList());
 
         return map;
     }
 
-    /**
-     * Método auxiliar para convertir un objeto Person (Actor/Director) en un Map.
-     * Debes asegurarte de tener esta clase importada y accesible.
-     */
+
     private Map<String, Object> personToMap(Person person) {
         Map<String, Object> map = new HashMap<>();
         map.put("id", person.getId());
