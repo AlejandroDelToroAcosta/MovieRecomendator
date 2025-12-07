@@ -1,6 +1,6 @@
 package org.tscd.datamart.model;
 
-public class Director {
+public class Director implements Person{
     private String id;
     private String name;
 
@@ -9,6 +9,7 @@ public class Director {
         this.name = name;
     }
 
+    @Override
     public String getId() {
         return id;
     }
@@ -16,7 +17,7 @@ public class Director {
     public void setId(String id) {
         this.id = id;
     }
-
+    @Override
     public String getName() {
         return name;
     }
