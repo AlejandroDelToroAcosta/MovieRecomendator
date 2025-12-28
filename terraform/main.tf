@@ -31,14 +31,14 @@ data "aws_ami" "ubuntu" {
 resource "aws_security_group" "neo4j_sg" {
   name        = "neo4j-server-sg"
   description = "Allow SSH (22) and Neo4j Bolt (7687)"
-  vpc_id      = "vpc-0c8c67692a5565d53"
+  vpc_id      = "vpc-0814f14835475d6f7"
 
   # Regla 1: Acceso SSH (Puerto 22) - [IP Pública corregida con /32]
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["83.59.4.240/32"]
+    cidr_blocks = ["83.59.186.130/32"]
     description = "SSH Access"
   }
 
@@ -47,7 +47,7 @@ resource "aws_security_group" "neo4j_sg" {
     from_port   = 7687
     to_port     = 7687
     protocol    = "tcp"
-    cidr_blocks = ["83.59.4.240/32"]
+    cidr_blocks = ["83.59.186.130/32"]
     description = "Neo4j Bolt Protocol"
   }
 
@@ -56,7 +56,7 @@ resource "aws_security_group" "neo4j_sg" {
     from_port   = 7474
     to_port     = 7474
     protocol    = "tcp"
-    cidr_blocks = ["83.59.4.240/32"]
+    cidr_blocks = ["83.59.186.130/32"]
     description = "Neo4j Browser HTTP"
   }
 
@@ -76,12 +76,12 @@ resource "aws_security_group" "neo4j_sg" {
 # 3. Creación de la Instancia EC2
 resource "aws_instance" "neo4j_server" {
   ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.medium"
-  key_name      = "clave-neo4j-final"
+  instance_type = "t2.micro"
+  key_name      = "clave-hoy"
 
   # Adjuntar el Security Group y especificar la subred
   vpc_security_group_ids = [aws_security_group.neo4j_sg.id]
-  subnet_id              = "subnet-0adb585c066f758be"
+  subnet_id              = "subnet-026e91fd2f5cf5b05"
 
   tags = {
     Name = "Neo4j-Datamart-Server"
@@ -102,6 +102,8 @@ resource "aws_instance" "neo4j_server" {
 
         # 4. Configurar el acceso remoto (Bolt: 7687 y HTTP: 7474)
         # Cambia la escucha de localhost a 0.0.0.0
+        "sudo sed -i 's/#server.bolt.listen_address=:7687/server.bolt.listen_address=0.0.0.0:7687/' /etc/neo4j/neo4j.conf",
+        "sudo sed -i 's/#server.http.listen_address=:7474/server.http.listen_address=0.0.0.0:7474/' /etc/neo4j/neo4j.conf",
         "sudo sed -i 's/#dbms.connector.bolt.listen_address=0.0.0.0:7687/dbms.connector.bolt.listen_address=0.0.0.0:7687/' /etc/neo4j/neo4j.conf",
         "sudo sed -i 's/#dbms.connector.http.listen_address=0.0.0.0:7474/dbms.connector.http.listen_address=0.0.0.0:7474/' /etc/neo4j/neo4j.conf",
 
@@ -111,7 +113,7 @@ resource "aws_instance" "neo4j_server" {
   connection {
         type        = "ssh"
         user        = "ubuntu" # Usuario estándar para la AMI de Ubuntu
-        private_key = file("./clave.txt") # Ruta a tu archivo .pem
+        private_key = file("./clave-hoy.txt") # Ruta a tu archivo .pem
         host        = self.public_ip
       }
   }
