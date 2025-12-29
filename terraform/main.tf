@@ -31,7 +31,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_security_group" "neo4j_sg" {
   name        = "neo4j-server-sg"
   description = "Allow SSH (22) and Neo4j Bolt (7687)"
-  vpc_id      = "vpc-0814f14835475d6f7"
+  vpc_id      = "vpc-09369dd8d8f1b641d"
 
   # Regla 1: Acceso SSH (Puerto 22) - [IP Pública corregida con /32]
   ingress {
@@ -76,12 +76,12 @@ resource "aws_security_group" "neo4j_sg" {
 # 3. Creación de la Instancia EC2
 resource "aws_instance" "neo4j_server" {
   ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.micro"
+  instance_type = "t2.small"
   key_name      = "clave-hoy"
 
   # Adjuntar el Security Group y especificar la subred
   vpc_security_group_ids = [aws_security_group.neo4j_sg.id]
-  subnet_id              = "subnet-026e91fd2f5cf5b05"
+  subnet_id              = "subnet-07a260d7818c42e1e"
 
   tags = {
     Name = "Neo4j-Datamart-Server"
@@ -123,4 +123,35 @@ resource "aws_instance" "neo4j_server" {
 output "neo4j_public_ip" {
   description = "Public IP address of the Neo4j server"
   value       = aws_instance.neo4j_server.public_ip
+}
+
+# 1. Cola de mensajes fallidos (Dead Letter Queue)
+resource "aws_sqs_queue" "movies_dlq" {
+  name = "movies-ingestion-dlq"
+}
+
+# 2. Cola principal SQS
+resource "aws_sqs_queue" "movies_queue" {
+  name                      = "movies-ingestion-queue"
+  delay_seconds             = 0
+  max_message_size          = 262144
+  message_retention_seconds = 86400
+
+
+  visibility_timeout_seconds = 100
+
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.movies_dlq.arn
+    maxReceiveCount     = 5 # Si falla 5 veces, va a la DLQ
+  })
+
+  tags = {
+    Environment = "Dev"
+    Project     = "Datamart-Movies"
+  }
+}
+
+output "sqs_queue_url" {
+  value       = aws_sqs_queue.movies_queue.url
+  description = "URL de la cola SQS"
 }

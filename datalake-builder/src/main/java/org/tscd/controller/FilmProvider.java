@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.Thread.sleep;
 import static org.tscd.utils.JsonUtils.*;
 
 public class FilmProvider {
@@ -44,7 +45,8 @@ public class FilmProvider {
         List<Movie> movieList = new ArrayList<>();
 
 
-            String newUrl = "https://api.imdbapi.dev/titles/" + "tt0054215";
+        for (String id: movieIds) {
+            String newUrl = "https://api.imdbapi.dev/titles/" + id;
             String json = HTTPClient.get(newUrl);
             Gson gson = new Gson();
             JsonObject jsonObject = gson.fromJson(json, JsonObject.class);
@@ -65,27 +67,32 @@ public class FilmProvider {
             JsonArray directors = jsonObject.get("directors").getAsJsonArray();
             for (int j = 0; j < directors.size(); j++) {
                 JsonObject director = directors.get(j).getAsJsonObject();
-                String id = director.get("id").getAsString();
+                String directorId = director.get("id").getAsString();
                 String name = director.get("displayName").getAsString();
-                Director newDirector = new Director(id, name);
+                Director newDirector = new Director(directorId, name);
                 directorsList.add(newDirector);
             }
 
             List<Actor> actorsList = new ArrayList<>();
-            JsonArray stars =getSafeArray(jsonObject, "stars");
+            JsonArray stars = getSafeArray(jsonObject, "stars");
             for (int j = 0; j < stars.size(); j++) {
                 JsonObject actor = stars.get(j).getAsJsonObject();
-                String id = actor.get("id").getAsString();
+                String actorId = actor.get("id").getAsString();
                 String name = actor.get("displayName").getAsString();
-                Actor newActor = new Actor(id, name);
+                Actor newActor = new Actor(actorId, name);
                 actorsList.add(newActor);
             }
             int seconds = getSafeInt(jsonObject, "runtimeSeconds");
 
 
-            Movie movie = new Movie("tt0054215", title, year, actorsList, directorsList, genres, rating, seconds);
+            Movie movie = new Movie(id, title, year, actorsList, directorsList, genres, rating, seconds);
             movieList.add(movie);
-
+            try {
+                sleep(1500);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
         return movieList;
     }
 }

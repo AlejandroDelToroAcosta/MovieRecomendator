@@ -47,5 +47,13 @@
             <version>2.37.1</version>
             <scope>compile</scope>
         </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sqs</artifactId>
+            <version>2.37.1</version>
+            <scope>compile</scope>
+        </dependency>
+
     </dependencies>
 </project>

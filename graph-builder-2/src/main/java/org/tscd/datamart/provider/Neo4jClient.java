@@ -30,7 +30,7 @@ public class Neo4jClient implements AutoCloseable, InsertionService {
         try (Session session = driver.session()) {
 
             Map<String, Object> parameters = new HashMap<>();
-            parameters.put("movies", movieMaps); // <-- ¡Usamos movieMaps!
+            parameters.put("movies", movieMaps);
 
             session.writeTransaction(tx -> {
                 tx.run(CREATE_MOVIE_GRAPH_QUERY, parameters);
