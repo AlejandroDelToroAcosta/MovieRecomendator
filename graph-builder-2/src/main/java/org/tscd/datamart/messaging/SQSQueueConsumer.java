@@ -39,7 +39,6 @@ public class SQSQueueConsumer implements QueueConsumer {
                 try {
                     handler.handle(msg.body());
 
-                    // ACK: borrar SOLO si todo fue bien
                     sqsClient.deleteMessage(b -> b
                             .queueUrl(queueUrl)
                             .receiptHandle(msg.receiptHandle())
@@ -47,7 +46,6 @@ public class SQSQueueConsumer implements QueueConsumer {
 
                 } catch (Exception e) {
                     System.err.println("Error procesando mensaje: " + e.getMessage());
-                    // NO borrar → SQS reintentará
                 }
             }
         }

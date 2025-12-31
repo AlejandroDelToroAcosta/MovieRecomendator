@@ -5,5 +5,5 @@ import org.tscd.datamart.model.Movie;
 import java.util.List;
 
 public interface StorageConsumer {
-    List<Movie> get(String key) throws Exception;
+    List<Movie> get(String bucket, String key) throws Exception;
 }

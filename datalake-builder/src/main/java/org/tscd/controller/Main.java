@@ -13,9 +13,9 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) throws IOException {
 
-        StorageProvider storageProvider = new AmazonS3Provider("bucket-tscd-prueba2");
+        StorageProvider storageProvider = new AmazonS3Provider(args[0]);
 
-        FilmProvider filmProvider = new FilmProvider("https://api.imdbapi.dev/titles?startYear=1950&endYear=1952");
+        FilmProvider filmProvider = new FilmProvider("https://api.imdbapi.dev/titles?startYear=1953&endYear=1955");
         List<String> titleIds = filmProvider.getMovieId();
         List<Movie> movieList = filmProvider.getMovieList(titleIds);
 
@@ -26,7 +26,7 @@ public class Main {
 
         QueuePublisher queuePublisher = new SQSQueuePublisher( "https://sqs.us-east-1.amazonaws.com/301998063112/movies-ingestion-queue");
 
-        queuePublisher.publish("s3://bucket-tscd-prueba2/" + filepath);
+        queuePublisher.publish("s3://" + args[0] + "/"+ filepath);
 
         System.out.println(movieList);
     }

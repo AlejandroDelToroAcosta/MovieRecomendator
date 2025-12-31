@@ -10,8 +10,8 @@ public class DatalakeConsumerService {
     public DatalakeConsumerService(StorageConsumer client) {
         this.client = client;
     }
-    public List<Movie> consumerCall(String key) throws Exception {
-        List<Movie> movieList = client.get(key);
+    public List<Movie> consumerCall(String bucket, String key) throws Exception {
+        List<Movie> movieList = client.get(bucket, key);
         return movieList;
     }
 }

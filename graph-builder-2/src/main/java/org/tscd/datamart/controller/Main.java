@@ -5,7 +5,6 @@ import org.tscd.datamart.messaging.MessageHandler;
 import org.tscd.datamart.messaging.MovieIngestionHandler;
 import org.tscd.datamart.messaging.QueueConsumer;
 import org.tscd.datamart.messaging.SQSQueueConsumer;
-import org.tscd.datamart.model.Movie;
 import org.tscd.datamart.consumer.DatalakeConsumerService;
 import org.tscd.datamart.provider.InsertionService;
 import org.tscd.datamart.provider.Neo4jClient;
@@ -17,7 +16,8 @@ import org.tscd.datamart.consumer.StorageConsumer;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        StorageConsumer storageConsumer = new S3Consumer("bucket-tscd-prueba2");
+        StorageConsumer storageConsumer = new S3Consumer();
+
         DatalakeConsumerService datalakeService =
                 new DatalakeConsumerService(storageConsumer);
 

@@ -18,11 +18,9 @@ import static software.amazon.awssdk.regions.Region.US_EAST_1;
 
 public class S3Consumer implements StorageConsumer {
     private final S3Client client;
-    private final String bucket;
     private final Gson gson;
 
-    public S3Consumer(String bucket) {
-        this.bucket = bucket;
+    public S3Consumer() {
         this.gson = new Gson();
         this.client = S3Client.builder()
                 .region(US_EAST_1)
@@ -30,11 +28,7 @@ public class S3Consumer implements StorageConsumer {
                 .build();
     }
 
-    private static AwsCredentialsProvider credentialsProvider() {
-        return DefaultCredentialsProvider.builder().build();
-    }
-
-    public List<Movie> get(String key) throws Exception {
+    public List<Movie> get(String bucket, String key) throws Exception {
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
@@ -51,4 +45,8 @@ public class S3Consumer implements StorageConsumer {
                 return movies;
             }
     }
+    private static AwsCredentialsProvider credentialsProvider() {
+        return DefaultCredentialsProvider.builder().build();
+    }
+
 }

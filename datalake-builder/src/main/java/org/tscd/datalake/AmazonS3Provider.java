@@ -53,7 +53,7 @@ public class AmazonS3Provider implements StorageProvider {
         File file = new File(filePath);
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)
-                .key(new File(filePath).getName())
+                .key(filePath)
                 .build();
 
         client.putObject(request, RequestBody.fromFile(file));
