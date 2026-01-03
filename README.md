@@ -24,6 +24,7 @@ At a high level, the platform follows this workflow:
 
 Each module is implemented as an independent service and communicates exclusively through well-defined interfaces and cloud services, ensuring high cohesion and low coupling. This design reflects common architectural patterns used in enterprise-grade, cloud-native data platforms.
 
+### Execution
 --- 
 ## Architecture Overview
 
