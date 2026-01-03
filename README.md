@@ -8,28 +8,28 @@
 
 This project implements an AWS-based enterprise data platform designed following an event-driven and loosely coupled architecture. The system simulates a real-world business data pipeline where data is ingested, stored, processed, and consumed by different components in an asynchronous and scalable manner.
 
-The architecture is composed of independent modules that communicate through cloud-managed services, allowing each component to evolve, scale, and fail independently. Amazon Web Services (AWS) is used as the underlying infrastructure provider, leveraging managed services such as Amazon S3, Amazon SQS, Amazon EC2, and Neo4j as the analytical data store.
+The platform acts as a **movie recommendation system**. It retrieves movie-related data from the **IMDb public API**, processes and enriches this information, and stores it in a graph-based Datamart. The final goal of the system is to provide personalized movie recommendations to end users based on their preferences and interactions.
 
-The main objective of the project is to demonstrate how modern data systems are designed in enterprise environments, applying best practices such as event-driven communication, infrastructure as code, separation of concerns, and cloud-native integration.
+The architecture is composed of independent modules that communicate through cloud-managed services, allowing each component to evolve, scale, and fail independently. Amazon Web Services (AWS) is used as the underlying infrastructure provider, leveraging managed services such as Amazon S3, Amazon SQS, Amazon EC2, and Neo4j as the analytical data store.
 
 At a high level, the platform follows this workflow:
 
-- A data ingestion module (Crawler) retrieves raw data from external sources.
+- A data ingestion module (Crawler) connects to the IMDb API and retrieves raw movie data.
 - The ingested data is stored in an Amazon S3 bucket, acting as a Data Lake.
 - Once the data is successfully stored, an event containing the S3 object location is published to an Amazon SQS queue.
 - A long-running consumer module (Datamart Listener) continuously listens to the queue.
 - When a new event is received, the consumer dynamically reads the referenced data from the Data Lake and processes it.
 - The processed data is then inserted into a Neo4j graph database, which represents the Datamart layer.
-- An API module provides access to the Datamart, enabling interaction with end users and external systems.
+- An API module exposes the Datamart to end users, allowing them to interact with the system and obtain movie recommendations based on their tastes.
 
-Each module is implemented as an independent service and communicates exclusively through well-defined interfaces and cloud services, ensuring high cohesion and low coupling. This design reflects common architectural patterns used in enterprise-grade data platforms deployed in the cloud.
+Each module is implemented as an independent service and communicates exclusively through well-defined interfaces and cloud services, ensuring high cohesion and low coupling. This design reflects common architectural patterns used in enterprise-grade, cloud-native data platforms.
 
 --- 
 ## Architecture Overview
 
 The following diagram presents a high-level view of the system architecture and execution flow. It illustrates how the different modules interact through AWS-managed services, following an event-driven approach.
 
-![Architecture Diagram](path/to/diagram.png)
+![Architecture Diagram](diagram.0.drawio.png)
 
 --- 
 
