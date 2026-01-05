@@ -1,5 +1,5 @@
 # AWS-Based Business Architechture
-## University of Las Palmas de Gran Canaria
+## Universidad de Las Palmas de Gran Canaria
 ### School of Computer Engineering
 #### Bachelor's Degree in Data Science and Engineering 
 ##### Technology Services for Data Science
