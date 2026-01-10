@@ -1,0 +1,82 @@
+name: Java CI with JaCoCo – Movie Recommender
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Execution environment"
+        required: true
+        default: "ci"
+      student:
+        description: "Student name"
+        required: true
+        default: "Rafa"
+
+jobs:
+  build-and-test:
+    name: Build, Test & Coverage
+    runs-on: ubuntu-latest
+
+    env:
+      PROJECT_NAME: "film-recomendator"
+      JAVA_VERSION: "21"
+
+    steps:
+      # ---------- CHECKOUT ----------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---------- CONTEXT INFO ----------
+      - name: GitHub context info
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Event: ${{ github.event_name }}"
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Run number: ${{ github.run_number }}"
+
+      # ---------- ENV & INPUTS ----------
+      - name: Show environment and inputs
+        run: |
+          echo "Project: ${{ env.PROJECT_NAME }}"
+          echo "Java version: ${{ env.JAVA_VERSION }}"
+          echo "Student: ${{ inputs.student }}"
+          echo "Environment: ${{ inputs.environment }}"
+
+      # ---------- JAVA SETUP ----------
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      # ---------- BUILD & TEST ----------
+      - name: Build and run tests with JaCoCo
+        run: mvn clean verify
+
+      # ---------- JOB STATUS ----------
+      - name: Job status
+        if: ${{ job.status == 'success' }}
+        run: echo "Build and tests completed successfully"
+
+      # ---------- RUNNER INFO ----------
+      - name: Runner information
+        run: |
+          echo "OS: ${{ runner.os }}"
+          echo "Architecture: ${{ runner.arch }}"
+          echo "Temp directory: ${{ runner.temp }}"
+
+      # ---------- UPLOAD JACOCO ----------
+      - name: Upload JaCoCo reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: |
+            **/target/site/jacoco
