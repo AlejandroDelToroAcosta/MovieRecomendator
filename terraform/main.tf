@@ -31,7 +31,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_security_group" "neo4j_sg" {
   name        = "neo4j-server-sg"
   description = "Allow SSH (22) and Neo4j Bolt (7687)"
-  vpc_id      = "vpc-0917797889b1775c2"
+  vpc_id      = "vpc-0824f31ed95455a25"
 
   # Regla 1: Acceso SSH (Puerto 22) - [IP Pública corregida con /32]
   ingress {
@@ -49,6 +49,15 @@ resource "aws_security_group" "neo4j_sg" {
     protocol    = "tcp"
     cidr_blocks = ["83.59.186.130/32"]
     description = "Neo4j Bolt Protocol"
+  }
+
+  # Regla para acceso para la lambda
+  ingress {
+    from_port   = 7687
+    to_port     = 7687
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Neo4j Bolt Protocol (Global Access)"
   }
 
   # Regla 3 (Opcional): Neo4j Browser (Puerto 7474) - [IP Pública corregida con /32]
@@ -81,7 +90,7 @@ resource "aws_instance" "neo4j_server" {
 
   # Adjuntar el Security Group y especificar la subred
   vpc_security_group_ids = [aws_security_group.neo4j_sg.id]
-  subnet_id              = "subnet-05b58e9816cfdb645"
+  subnet_id              = "subnet-0e0c8c3ab729a9b57"
 
   tags = {
     Name = "Neo4j-Datamart-Server"
@@ -106,9 +115,17 @@ resource "aws_instance" "neo4j_server" {
         "sudo sed -i 's/#server.http.listen_address=:7474/server.http.listen_address=0.0.0.0:7474/' /etc/neo4j/neo4j.conf",
         "sudo sed -i 's/#dbms.connector.bolt.listen_address=0.0.0.0:7687/dbms.connector.bolt.listen_address=0.0.0.0:7687/' /etc/neo4j/neo4j.conf",
         "sudo sed -i 's/#dbms.connector.http.listen_address=0.0.0.0:7474/dbms.connector.http.listen_address=0.0.0.0:7474/' /etc/neo4j/neo4j.conf",
-
+# Asegurar que acepta conexiones de fuera (v5 syntax)
+        "sudo sed -i 's/#server.default_listen_address=0.0.0.0/server.default_listen_address=0.0.0.0/' /etc/neo4j/neo4j.conf",
+        "sudo sed -i 's/#server.default_advertised_address=localhost/server.default_advertised_address=${self.public_ip}/' /etc/neo4j/neo4j.conf",
         # 5. Reiniciar Neo4j para aplicar la configuración y empezar a escuchar
         "sudo systemctl restart neo4j",
+        # 6. Esperar a que el servicio esté listo
+        "sleep 10",
+
+        # 7. Cambiar la contraseña inicial (neo4j/neo4j) por la tuya personalizada
+        # Esto elimina la necesidad de entrar al navegador
+        "sudo neo4j-admin server set-initial-password hola-hola"
       ]
   connection {
         type        = "ssh"
@@ -124,34 +141,25 @@ output "neo4j_public_ip" {
   description = "Public IP address of the Neo4j server"
   value       = aws_instance.neo4j_server.public_ip
 }
+# --- Lambda function for querying Neo4j ---
 
-# 1. Cola de mensajes fallidos (Dead Letter Queue)
-resource "aws_sqs_queue" "movies_dlq" {
-  name = "movies-ingestion-dlq"
-}
+resource "aws_lambda_function" "movies_query_lambda" {
+  function_name = "movies-query-api"
+  role          = "arn:aws:iam::007357037132:role/lambda-run-role"
 
-# 2. Cola principal SQS
-resource "aws_sqs_queue" "movies_queue" {
-  name                      = "movies-ingestion-queue"
-  delay_seconds             = 0
-  max_message_size          = 262144
-  message_retention_seconds = 86400
+  handler = "org.tscd.query.MovieRequestHandler::handleRequest"
+  runtime = "java17"
+  timeout = 30
+  memory_size = 1024
 
+  filename         = "./query-handler-1.0-SNAPSHOT.jar"
+  source_code_hash = filebase64sha256("./query-handler-1.0-SNAPSHOT.jar")
 
-  visibility_timeout_seconds = 100
-
-  redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.movies_dlq.arn
-    maxReceiveCount     = 5 # Si falla 5 veces, va a la DLQ
-  })
-
-  tags = {
-    Environment = "Dev"
-    Project     = "Datamart-Movies"
+  environment {
+    variables = {
+      NEO4J_URI      = "bolt://${aws_instance.neo4j_server.public_ip}:7687"
+      NEO4J_USER     = "neo4j"
+      NEO4J_PASSWORD = "hola-hola"
+    }
   }
-}
-
-output "sqs_queue_url" {
-  value       = aws_sqs_queue.movies_queue.url
-  description = "URL de la cola SQS"
 }

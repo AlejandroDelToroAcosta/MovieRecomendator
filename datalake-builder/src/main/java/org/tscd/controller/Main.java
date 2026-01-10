@@ -1,5 +1,6 @@
 package org.tscd.controller;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import org.tscd.datalake.AmazonS3Provider;
 import org.tscd.datalake.DatalakeBuilder;
 import org.tscd.datalake.StorageProvider;
@@ -11,10 +12,14 @@ import java.io.IOException;
 import java.util.List;
 
 public class Main {
+
+
     public static void main(String[] args) throws IOException {
+        Dotenv dotenv = Dotenv.load();
+        String bucketName = dotenv.get("BUCKET_NAME");
+        String sqsQueueUrl = dotenv.get("SQS_QUEUE_URL");
 
-        StorageProvider storageProvider = new AmazonS3Provider(args[0]);
-
+        StorageProvider storageProvider = new AmazonS3Provider(bucketName);
         FilmProvider filmProvider = new FilmProvider("https://api.imdbapi.dev/titles?startYear=1953&endYear=1955");
         List<String> titleIds = filmProvider.getMovieId();
         List<Movie> movieList = filmProvider.getMovieList(titleIds);
@@ -24,9 +29,9 @@ public class Main {
         String filepath = datalakeBuilder.write(movieList);
         datalakeBuilder.cloudStorage(filepath);
 
-        QueuePublisher queuePublisher = new SQSQueuePublisher( "https://sqs.us-east-1.amazonaws.com/301998063112/movies-ingestion-queue");
+        QueuePublisher queuePublisher = new SQSQueuePublisher( sqsQueueUrl);
 
-        queuePublisher.publish("s3://" + args[0] + "/"+ filepath);
+        queuePublisher.publish("s3://" +bucketName + "/"+ filepath);
 
         System.out.println(movieList);
     }
