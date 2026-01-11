@@ -4,7 +4,7 @@
 ### School of Computer Engineering
 #### Bachelor's Degree in Data Science and Engineering 
 ##### Technology Services for Data Science
-
+##### By Rafael Suárez Saavedra & Alejandro Del Toro Acosta
 ---
 
 ## Description
