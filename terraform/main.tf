@@ -121,11 +121,7 @@ resource "aws_instance" "neo4j_server" {
         # 5. Reiniciar Neo4j para aplicar la configuración y empezar a escuchar
         "sudo systemctl restart neo4j",
         # 6. Esperar a que el servicio esté listo
-        "sleep 10",
 
-        # 7. Cambiar la contraseña inicial (neo4j/neo4j) por la tuya personalizada
-        # Esto elimina la necesidad de entrar al navegador
-        "sudo neo4j-admin server set-initial-password hola-hola"
       ]
   connection {
         type        = "ssh"
@@ -157,9 +153,10 @@ resource "aws_lambda_function" "movies_query_lambda" {
 
   environment {
     variables = {
-      NEO4J_URI      = "bolt://${aws_instance.neo4j_server.public_ip}:7687"
-      NEO4J_USER     = "neo4j"
-      NEO4J_PASSWORD = "hola-hola"
+      NEO4J_URI="bolt://${aws_instance.neo4j_server.public_ip}:7687"
+      NEO4J_USER=var.neo4j_user
+      NEO4J_PASSWD=var.neo4j_passwd
+
     }
   }
 }

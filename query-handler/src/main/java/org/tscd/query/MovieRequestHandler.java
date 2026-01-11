@@ -12,40 +12,56 @@ public class MovieRequestHandler implements RequestHandler<Map<String, String>, 
 
     private final Driver driver;
     public MovieRequestHandler() {
-        // Leemos las variables que definiste en Terraform
-        String uri = System.getenv("NEO4J_URI");
-        String user = System.getenv("NEO4J_USER");
-        String password = System.getenv("NEO4J_PASSWORD");
+
+        String boltUrl = System.getenv("NEO4J_URI");
+        String neo4jUser = System.getenv("NEO4J_USER");
+        String neo4jPasswd = System.getenv("NEO4J_PASSWD");
+
 
         Config config = Config.builder()
                 .withoutEncryption()
                 .build();
 
-        this.driver = GraphDatabase.driver(uri, AuthTokens.basic(user, password), config);
+        // Si esto falla, el log de CloudWatch te dirá exactamente qué falta
+        if (boltUrl == null || boltUrl.isEmpty()) {
+            throw new RuntimeException("ERROR CRÍTICO: La variable NEO4J_URI es NULL o está vacía.");
+        }
+        this.driver = GraphDatabase.driver(boltUrl, AuthTokens.basic(neo4jUser, neo4jPasswd), config);
     }
 
     @Override
     public String handleRequest(Map<String, String> input, Context context) {
+
+        context.getLogger().log("Input recibido: " + input);
+
+        if (input == null) {
+            return "{\"error\": \"El input es nulo\"}";
+        }
+
         String type = input.get("type");
         String actorName = input.get("value");
 
+        if (actorName == null || actorName.isEmpty()) {
+            return "{\"error\": \"El nombre del actor (value) no puede ser nulo o vacío\"}";
+        }
+
         if (!"getActor".equals(type)) {
-            return "{\"error\": \"Tipo de consulta no soportado\"}";
+            return "{\"error\": \"Tipo de consulta no soportado: " + type + "\"}";
         }
 
         try (Session session = driver.session()) {
             return session.executeRead(tx -> {
-                Result result = tx.run(
-                        "MATCH (a:Actor {name: $name})-[:ACTED_IN]->(m:Movie) RETURN m.title AS title",
-                        Values.parameters("name", actorName)
-                );
+                String query = "MATCH (a:Actor {name: $name})-[:ACTED_IN]->(m:Movie) RETURN m.title AS title";
+
+                Result result = tx.run(query, Values.parameters("name", actorName));
 
                 List<String> movies = result.list(record -> record.get("title").asString());
-
-                return "{\"actor\": \"" + actorName + "\", \"movies\": " + movies.toString() + "}";
+                String moviesJson = "[\"" + String.join("\", \"", movies) + "\"]";
+                return "{\"actor\": \"" + actorName + "\", \"movies\": " + moviesJson + "}";
             });
         } catch (Exception e) {
-            return "{\"error\": \"Error conectando a Neo4j: " + e.getMessage() + "\"}";
+            context.getLogger().log("Error en Cypher: " + e.getMessage());
+            return "{\"error\": \"Error en Neo4j: " + e.getMessage() + "\"}";
         }
     }
 }
