@@ -30,7 +30,7 @@ Each module is implemented as an independent service and communicates exclusivel
 
 The following diagram presents a high-level view of the system architecture and execution flow. It illustrates how the different modules interact through AWS-managed services, following an event-driven approach.
 
-![Architecture Diagram](diagram.0.drawio.png)
+![Architecture Diagram](diagram.drawio.png)
 
 --- 
 
