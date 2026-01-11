@@ -67,7 +67,6 @@ public class Neo4jClient implements AutoCloseable, InsertionService {
         Map<String, Object> map = new HashMap<>();
         map.put("id", person.getId());
         map.put("name", person.getName());
-        // Añade otras propiedades de Person si existen (e.g., birthYear, role)
         return map;
     }
 

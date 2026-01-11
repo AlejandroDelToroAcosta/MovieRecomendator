@@ -31,7 +31,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_security_group" "neo4j_sg" {
   name        = "neo4j-server-sg"
   description = "Allow SSH (22) and Neo4j Bolt (7687)"
-  vpc_id      = "vpc-0824f31ed95455a25"
+  vpc_id      = "vpc-004eec222e4f2c2e3"
 
   # Regla 1: Acceso SSH (Puerto 22) - [IP Pública corregida con /32]
   ingress {
@@ -90,7 +90,7 @@ resource "aws_instance" "neo4j_server" {
 
   # Adjuntar el Security Group y especificar la subred
   vpc_security_group_ids = [aws_security_group.neo4j_sg.id]
-  subnet_id              = "subnet-0e0c8c3ab729a9b57"
+  subnet_id              = "subnet-07993af941c5b615d"
 
   tags = {
     Name = "Neo4j-Datamart-Server"

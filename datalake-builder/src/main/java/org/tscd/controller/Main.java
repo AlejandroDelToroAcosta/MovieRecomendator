@@ -29,7 +29,7 @@ public class Main {
         String filepath = datalakeBuilder.write(movieList);
         datalakeBuilder.cloudStorage(filepath);
 
-        QueuePublisher queuePublisher = new SQSQueuePublisher( sqsQueueUrl);
+        QueuePublisher queuePublisher = new SQSQueuePublisher(sqsQueueUrl);
 
         queuePublisher.publish("s3://" +bucketName + "/"+ filepath);
 
