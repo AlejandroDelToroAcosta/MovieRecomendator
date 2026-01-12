@@ -1,4 +1,4 @@
-# AWS-Based Movie Data Platform & Recommendation System
+# AWS-Based Movie Data Platform 
 
 ## Universidad de Las Palmas de Gran Canaria
 ### School of Computer Engineering
