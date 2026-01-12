@@ -28,7 +28,7 @@ public class MovieIngestionHandler implements MessageHandler {
                 ? s3Uri.getPath().substring(1)
                 : s3Uri.getPath();
 
-       // List<Movie> movies = datalakeService.consumerCall(bucket, key);
-        //insertionService.writeMovies(movies);
+        List<Movie> movies = datalakeService.consumerCall(bucket, key);
+        insertionService.writeMovies(movies);
     }
 }

@@ -31,7 +31,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_security_group" "neo4j_sg" {
   name        = "neo4j-server-sg"
   description = "Allow SSH (22) and Neo4j Bolt (7687)"
-  vpc_id      = "vpc-06e89d1ea23096ee7"
+  vpc_id      = "vpc-0ab9468f1d5553e9e"
 
   # Regla para la API (Puerto 8080)
   ingress {
@@ -99,7 +99,7 @@ resource "aws_instance" "neo4j_server" {
 
   # Adjuntar el Security Group y especificar la subred
   vpc_security_group_ids = [aws_security_group.neo4j_sg.id]
-  subnet_id              = "subnet-054124c6c7abca0be"
+  subnet_id              = "subnet-00fc94134ef5eba28"
 
   tags = {
     Name = "Neo4j-Datamart-Server"
@@ -170,6 +170,35 @@ resource "aws_lambda_function" "movies_query_lambda" {
   }
 }
 
+# 1. Cola de mensajes fallidos (Dead Letter Queue)
+resource "aws_sqs_queue" "movies_dlq" {
+  name = "movies-ingestion-dlq"
+}
+# 2. Cola principal SQS
+resource "aws_sqs_queue" "movies_queue" {
+  name                      = "movies-ingestion-queue"
+  delay_seconds             = 0
+  max_message_size          = 262144
+  message_retention_seconds = 86400
+
+
+  visibility_timeout_seconds = 100
+
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.movies_dlq.arn
+    maxReceiveCount     = 5 # Si falla 5 veces, va a la DLQ
+  })
+
+  tags = {
+    Environment = "Dev"
+    Project     = "Datamart-Movies"
+  }
+}
+
+output "sqs_queue_url" {
+  value       = aws_sqs_queue.movies_queue.url
+  description = "URL de la cola SQS"
+}
 # Instancia para la API
 resource "aws_instance" "api_server" {
   ami           = data.aws_ami.ubuntu.id
@@ -177,7 +206,7 @@ resource "aws_instance" "api_server" {
   key_name      = "clave-hoy"
 
   vpc_security_group_ids = [aws_security_group.neo4j_sg.id] # Usamos el mismo SG por ahora
-  subnet_id              = "subnet-054124c6c7abca0be"
+  subnet_id              = "subnet-00fc94134ef5eba28"
 
   tags = {
     Name = "API-Movie-Server"

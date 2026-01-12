@@ -11,7 +11,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
-import java.net.URI;
 import java.util.List;
 
 import static software.amazon.awssdk.regions.Region.US_EAST_1;
@@ -29,28 +28,22 @@ public class S3Consumer implements StorageConsumer {
                 .build();
     }
 
-    public List<Movie> get(String s3Path) throws Exception {
-        URI s3Uri = new URI(s3Path);
-
-        String bucket = s3Uri.getHost();
-        String key = s3Uri.getPath().startsWith("/")
-                ? s3Uri.getPath().substring(1)
-                : s3Uri.getPath();
+    public List<Movie> get(String bucket, String key) throws Exception {
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
                 .build();
 
-            InputStream s3Stream = client.getObject(getObjectRequest);
+        InputStream s3Stream = client.getObject(getObjectRequest);
 
-            try (Reader reader = new InputStreamReader(s3Stream)) {
+        try (Reader reader = new InputStreamReader(s3Stream)) {
 
-                Type movieListType = new TypeToken<List<Movie>>() {}.getType();
-                List<Movie> movies = gson.fromJson(reader, movieListType);
+            Type movieListType = new TypeToken<List<Movie>>() {}.getType();
+            List<Movie> movies = gson.fromJson(reader, movieListType);
 
-                s3Stream.close();
-                return movies;
-            }
+            s3Stream.close();
+            return movies;
+        }
     }
     private static AwsCredentialsProvider credentialsProvider() {
         return DefaultCredentialsProvider.builder().build();

@@ -17,7 +17,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         Dotenv dotenv = Dotenv.load();
         String bucketName = dotenv.get("BUCKET_NAME");
-        //String sqsQueueUrl = dotenv.get("SQS_QUEUE_URL");
+        String sqsQueueUrl = dotenv.get("SQS_QUEUE_URL");
 
         StorageProvider storageProvider =
                 new AmazonS3Provider(bucketName);
@@ -37,11 +37,11 @@ public class Main {
 
         datalakeBuilder.cloudStorage(filepath);
 
-        //QueuePublisher queuePublisher =
-          //      new SQSQueuePublisher(
-            //    sqsQueueUrl);
+        QueuePublisher queuePublisher =
+                new SQSQueuePublisher(
+                sqsQueueUrl);
 
-        //queuePublisher.publish("s3://" +bucketName + "/"+ filepath);
+        queuePublisher.publish("s3://" +bucketName + "/"+ filepath);
 
         System.out.println(movieList);
     }
