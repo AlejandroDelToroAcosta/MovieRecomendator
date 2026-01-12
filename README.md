@@ -1,58 +1,69 @@
-# AWS-Based Business Architechture
+# AWS-Based Movie Data Platform & Recommendation System
+
 ## Universidad de Las Palmas de Gran Canaria
 ### School of Computer Engineering
 #### Bachelor's Degree in Data Science and Engineering 
 ##### Technology Services for Data Science
+**Authors:**
+* **Rafael Suárez Saavedra** 
+* **Alejandro Del Toro Acosta**
 ---
+
 ## Description
 
-This project implements an AWS-based enterprise data platform designed following an event-driven and loosely coupled architecture. The system simulates a real-world business data pipeline where data is ingested, stored, processed, and consumed by different components in an asynchronous and scalable manner.
+This project implements an AWS-based enterprise data platform designed following an **event-driven and loosely coupled architecture**. The system simulates a real-world business data pipeline where data is ingested, stored, processed, and consumed asynchronously.
 
-The platform acts as a **movie recommendation system**. It retrieves movie-related data from the **IMDb public API**, processes and enriches this information, and stores it in a graph-based Datamart. The final goal of the system is to provide personalized movie recommendations to end users based on their preferences and interactions.
+The platform acts as a **movie recommendation system**. It retrieves movie-related data from the **IMDb public API**, processes and enriches this information, and stores it in a graph-based Datamart. The final goal is to provide personalized movie information and recommendations to end users.
 
-The architecture is composed of independent modules that communicate through cloud-managed services, allowing each component to evolve, scale, and fail independently. Amazon Web Services (AWS) is used as the underlying infrastructure provider, leveraging managed services such as Amazon S3, Amazon SQS, Amazon EC2, and Neo4j as the analytical data store.
+The architecture is composed of independent modules that communicate through cloud-managed services, ensuring high cohesion and low coupling. 
 
-At a high level, the platform follows this workflow:
+### Core Workflow:
 
-- A data ingestion module (Crawler) connects to the IMDb API and retrieves raw movie data.
-- The ingested data is stored in an Amazon S3 bucket, acting as a Data Lake.
-- Once the data is successfully stored, an event containing the S3 object location is published to an Amazon SQS queue.
-- A long-running consumer module (Datamart Listener) continuously listens to the queue.
-- When a new event is received, the consumer dynamically reads the referenced data from the Data Lake and processes it.
-- The processed data is then inserted into a Neo4j graph database, which represents the Datamart layer.
-- An API module exposes the Datamart to end users, allowing them to interact with the system and obtain movie recommendations based on their tastes.
+1.  **Data Ingestion (Crawler):** A Java module connects to the IMDb API and retrieves raw movie data.
+2.  **Data Lake Storage:** The ingested data is stored in an **Amazon S3** bucket.
+3.  **Event Notification:** Once stored, an event with the object location is published to an **Amazon SQS** queue.
+4.  **Datamart Ingestion (Listener):** A consumer module listens to the queue, reads the data from S3, and processes it.
+5.  **Graph Datamart:** Processed data is inserted into a **Neo4j** database running on **Amazon EC2**.
+6.  **Containerized API:** A **Spring Boot** application (dockerized and managed via **Amazon ECR**) exposes REST endpoints.
+7.  **Serverless Querying:** The API invokes an **AWS Lambda** function to execute optimized Cypher queries against Neo4j, returning processed results to the user.
 
-Each module is implemented as an independent service and communicates exclusively through well-defined interfaces and cloud services, ensuring high cohesion and low coupling. This design reflects common architectural patterns used in enterprise-grade, cloud-native data platforms.
-
-### Execution
 --- 
+
 ## Architecture Overview
 
-The following diagram presents a high-level view of the system architecture and execution flow. It illustrates how the different modules interact through AWS-managed services, following an event-driven approach.
+The following diagram presents the complete system architecture, including the ingestion pipeline and the user query path.
 
-![Architecture Diagram](diagram.0.drawio.png)
+![Architecture Diagram](diagram.drawio.png)
+
+
 
 --- 
 
-## Resources
+## Technical Resources & Stack
 
-This project is entirely developed in **Java**, following a modular and layered design that promotes separation of concerns and maintainability. Each module is built as an independent Java application, responsible for a specific role within the overall architecture.
+### Data Infrastructure
+* **Amazon S3:** Acts as the Data Lake layer for raw and intermediate data storage.
+* **Amazon SQS:** Asynchronous communication bridge between ingestion and processing modules.
+* **Neo4j (on Amazon EC2):** Analytical graph database used as the Datamart layer for relationship-heavy queries.
 
-The platform relies on several **AWS cloud services** to implement a scalable, reliable, and event-driven data pipeline:
+### Computation & API Layer
+* **Spring Boot:** Framework for the RESTful API, providing a robust entry point for end users.
+* **AWS Lambda:** Serverless compute layer that encapsulates the database query logic, decoupling the API from the Datamart.
+* **Docker & Amazon ECR:** The API is containerized for consistency and stored in Amazon Elastic Container Registry for cloud deployment.
 
-- **Amazon S3**  
-  Used as the Data Lake layer, where raw and intermediate data is stored. Each ingestion process writes data to a structured path within the bucket, enabling versioning and traceability of executions.
+### Tools & Development
+* **Terraform (IaC):** The entire infrastructure is provisioned declaratively, ensuring reproducibility and consistency across environments.
+* **AWS SDK for Java:** Used for programmatic interaction with S3, SQS, and Lambda.
+* **Maven:** Project management and build tool for the Java modules.
 
-- **Amazon SQS (Simple Queue Service)**  
-  Acts as the asynchronous communication mechanism between the ingestion (Crawler) and processing (Datamart) modules. Events published to the queue contain metadata describing the location of newly ingested data in S3.
+---
 
-- **Amazon EC2**  
-  Hosts the Neo4j graph database instance used as the Datamart layer. This allows full control over the database configuration while running in a cloud environment.
+## Infrastructure as Code (Terraform)
 
-- **Neo4j**  
-  Serves as the analytical data store, enabling graph-based modeling and querying of the processed data.
+The project leverages **Terraform** to manage:
+* **VPC & Networking:** Subnets and Security Groups.
+* **Compute:** EC2 instances for Neo4j and Spring Boot.
+* **Serverless:** AWS Lambda function deployment and IAM role permissions.
+* **Messaging:** SQS Queue configuration.
 
-- **AWS SDK for Java**  
-  Used by the application modules to interact programmatically with AWS services such as S3 and SQS.
-
-In addition, the infrastructure of the platform is provisioned using **Terraform**, following the Infrastructure as Code (IaC) paradigm. Terraform is used to declaratively define and manage cloud resources such as EC2 instances, S3 buckets, and SQS queues, ensuring reproducibility, consistency, and ease of deployment across environments.
+---
