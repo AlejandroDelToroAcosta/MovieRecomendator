@@ -17,21 +17,31 @@ public class Main {
     public static void main(String[] args) throws IOException {
         Dotenv dotenv = Dotenv.load();
         String bucketName = dotenv.get("BUCKET_NAME");
-        String sqsQueueUrl = dotenv.get("SQS_QUEUE_URL");
+        //String sqsQueueUrl = dotenv.get("SQS_QUEUE_URL");
 
-        StorageProvider storageProvider = new AmazonS3Provider(bucketName);
-        FilmProvider filmProvider = new FilmProvider("https://api.imdbapi.dev/titles?startYear=1953&endYear=1955");
+        StorageProvider storageProvider =
+                new AmazonS3Provider(bucketName);
+
+        FilmProvider filmProvider =
+                new FilmProvider("https://api.imdbapi.dev/titles?startYear=1953&endYear=1955");
+
         List<String> titleIds = filmProvider.getMovieId();
+
         List<Movie> movieList = filmProvider.getMovieList(titleIds);
 
-        DatalakeBuilder datalakeBuilder = new DatalakeBuilder(storageProvider);
+        DatalakeBuilder datalakeBuilder =
+                new DatalakeBuilder(
+                storageProvider);
 
         String filepath = datalakeBuilder.write(movieList);
+
         datalakeBuilder.cloudStorage(filepath);
 
-        QueuePublisher queuePublisher = new SQSQueuePublisher(sqsQueueUrl);
+        //QueuePublisher queuePublisher =
+          //      new SQSQueuePublisher(
+            //    sqsQueueUrl);
 
-        queuePublisher.publish("s3://" +bucketName + "/"+ filepath);
+        //queuePublisher.publish("s3://" +bucketName + "/"+ filepath);
 
         System.out.println(movieList);
     }

@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>datalake-builder</module>
-        <module>graph-builder-2</module>
+        <module>datamart-builder</module>
         <module>query-handler</module>
     </modules>
 
@@ -26,6 +26,7 @@
             <artifactId>dotenv-java</artifactId>
             <version>3.0.0</version>
         </dependency>
+
     </dependencies>
 
 </project>

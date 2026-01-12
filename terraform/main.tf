@@ -31,7 +31,16 @@ data "aws_ami" "ubuntu" {
 resource "aws_security_group" "neo4j_sg" {
   name        = "neo4j-server-sg"
   description = "Allow SSH (22) and Neo4j Bolt (7687)"
-  vpc_id      = "vpc-004eec222e4f2c2e3"
+  vpc_id      = "vpc-06e89d1ea23096ee7"
+
+  # Regla para la API (Puerto 8080)
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # O tu IP específica para mayor seguridad
+    description = "API Access"
+  }
 
   # Regla 1: Acceso SSH (Puerto 22) - [IP Pública corregida con /32]
   ingress {
@@ -90,7 +99,7 @@ resource "aws_instance" "neo4j_server" {
 
   # Adjuntar el Security Group y especificar la subred
   vpc_security_group_ids = [aws_security_group.neo4j_sg.id]
-  subnet_id              = "subnet-07993af941c5b615d"
+  subnet_id              = "subnet-054124c6c7abca0be"
 
   tags = {
     Name = "Neo4j-Datamart-Server"
@@ -143,20 +152,40 @@ resource "aws_lambda_function" "movies_query_lambda" {
   function_name = "movies-query-api"
   role          = "arn:aws:iam::007357037132:role/lambda-run-role"
 
-  handler = "org.tscd.query.MovieRequestHandler::handleRequest"
-  runtime = "java17"
-  timeout = 30
+  handler     = "org.tscd.query.MovieRequestHandler::handleRequest"
+  runtime     = "java17"
+  timeout     = 30
   memory_size = 1024
 
-  filename         = "./query-handler-1.0-SNAPSHOT.jar"
+  filename = "./query-handler-1.0-SNAPSHOT.jar"
   source_code_hash = filebase64sha256("./query-handler-1.0-SNAPSHOT.jar")
 
   environment {
     variables = {
-      NEO4J_URI="bolt://${aws_instance.neo4j_server.public_ip}:7687"
-      NEO4J_USER=var.neo4j_user
-      NEO4J_PASSWD=var.neo4j_passwd
+      NEO4J_URI    = "bolt://${aws_instance.neo4j_server.public_ip}:7687"
+      NEO4J_USER   = var.neo4j_user
+      NEO4J_PASSWD = var.neo4j_passwd
 
     }
   }
 }
+
+# Instancia para la API
+resource "aws_instance" "api_server" {
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = "t2.micro"
+  key_name      = "clave-hoy"
+
+  vpc_security_group_ids = [aws_security_group.neo4j_sg.id] # Usamos el mismo SG por ahora
+  subnet_id              = "subnet-054124c6c7abca0be"
+
+  tags = {
+    Name = "API-Movie-Server"
+  }
+}
+
+  # 2. Output para saber la IP de la nueva API
+output "api_public_ip" {
+  value = aws_instance.api_server.public_ip
+}
+
