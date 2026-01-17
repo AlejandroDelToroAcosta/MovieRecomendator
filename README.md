@@ -1,4 +1,4 @@
-# AWS-Based Movie Data Platform & Recommendation System
+# AWS-Based Movie Data Platform 
 
 ## Universidad de Las Palmas de Gran Canaria
 ### School of Computer Engineering
@@ -33,7 +33,7 @@ The architecture is composed of independent modules that communicate through clo
 
 The following diagram presents the complete system architecture, including the ingestion pipeline and the user query path.
 
-![Architecture Diagram](diagram.drawio.png)
+![Architecture Diagram](diagraam.png)
 
 
 
