@@ -1,38 +1,38 @@
 package org.tscd.api.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.tscd.api.lambda.LambdaQueryClient;
+import org.springframework.web.bind.annotation.*;
+import org.tscd.api.service.Neo4jService;
 
 @RestController
 @RequestMapping("/api")
 public class MovieController {
 
-    private final LambdaQueryClient lambda;
+    private final Neo4jService neo4jService;
 
-    public MovieController(LambdaQueryClient lambda) {
-        this.lambda = lambda;
+    public MovieController(Neo4jService neo4jService) {
+        this.neo4jService = neo4jService;
     }
 
     @GetMapping("/test")
     public String test() {
-        return "El servidor funciona correctamente";
+        return "Servidor conectado directamente a Neo4j funcionando";
     }
 
-    @GetMapping("/movie/{title}")
-    public Object getMovie(@PathVariable String title) {
-        return lambda.call("getMovie", title);
+    // Cambiado de /movie/{title} a /movie?title=...
+    @GetMapping("/movie")
+    public String getMovie(@RequestParam(name = "title") String title) {
+        return neo4jService.executeQuery("getMovie", title);
     }
 
-    @GetMapping("/actor/{name}")
-    public Object getActor(@PathVariable String name) {
-        return lambda.call("getActor", name);
+    // Cambiado de /actor/{name} a /actor?name=...
+    @GetMapping("/actor")
+    public String getActor(@RequestParam(name = "name") String name) {
+        return neo4jService.executeQuery("getActor", name);
     }
 
-    @GetMapping("/director/{name}")
-    public Object getDirector(@PathVariable String name) {
-        return lambda.call("getDirector", name);
+    // Cambiado de /director/{name} a /director?name=...
+    @GetMapping("/director")
+    public String getDirector(@RequestParam(name = "name") String name) {
+        return neo4jService.executeQuery("getDirector", name);
     }
 }

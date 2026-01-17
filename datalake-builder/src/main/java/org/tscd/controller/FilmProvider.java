@@ -44,7 +44,6 @@ public class FilmProvider {
     public List<Movie> getMovieList(List<String> movieIds) throws IOException {
         List<Movie> movieList = new ArrayList<>();
 
-
         for (String id: movieIds) {
             String newUrl = "https://api.imdbapi.dev/titles/" + id;
             String json = HTTPClient.get(newUrl);

@@ -11,6 +11,8 @@ import org.tscd.model.Movie;
 import java.io.IOException;
 import java.util.List;
 
+import static java.lang.Thread.sleep;
+
 public class Main {
 
 
@@ -22,27 +24,39 @@ public class Main {
         StorageProvider storageProvider =
                 new AmazonS3Provider(bucketName);
 
-        FilmProvider filmProvider =
-                new FilmProvider("https://api.imdbapi.dev/titles?startYear=1953&endYear=1955");
+        int endYear = 1955;
 
-        List<String> titleIds = filmProvider.getMovieId();
+        for (int i = 0; i< 20; i+=5) {
+            FilmProvider filmProvider =
+                    new FilmProvider("https://api.imdbapi.dev/titles?startYear=1953&endYear=" + endYear);
 
-        List<Movie> movieList = filmProvider.getMovieList(titleIds);
+            List<String> titleIds = filmProvider.getMovieId();
 
-        DatalakeBuilder datalakeBuilder =
-                new DatalakeBuilder(
-                storageProvider);
+            List<Movie> movieList = filmProvider.getMovieList(titleIds);
 
-        String filepath = datalakeBuilder.write(movieList);
+            DatalakeBuilder datalakeBuilder =
+                    new DatalakeBuilder(
+                            storageProvider);
 
-        datalakeBuilder.cloudStorage(filepath);
+            String filepath = datalakeBuilder.write(movieList);
 
-        QueuePublisher queuePublisher =
-                new SQSQueuePublisher(
-                sqsQueueUrl);
+            datalakeBuilder.cloudStorage(filepath);
 
-        queuePublisher.publish("s3://" +bucketName + "/"+ filepath);
+            QueuePublisher queuePublisher =
+                    new SQSQueuePublisher(
+                            sqsQueueUrl);
 
-        System.out.println(movieList);
+            queuePublisher.publish("s3://" + bucketName + "/" + filepath);
+
+            System.out.println(movieList);
+            endYear = endYear+5;
+
+
+            try {
+                sleep(300);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

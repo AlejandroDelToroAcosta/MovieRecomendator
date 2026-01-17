@@ -31,7 +31,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_security_group" "neo4j_sg" {
   name        = "neo4j-server-sg"
   description = "Allow SSH (22) and Neo4j Bolt (7687)"
-  vpc_id      = "vpc-0ab9468f1d5553e9e"
+  vpc_id      = "vpc-02d8239087724b96b"
 
   # Regla para la API (Puerto 8080)
   ingress {
@@ -99,7 +99,7 @@ resource "aws_instance" "neo4j_server" {
 
   # Adjuntar el Security Group y especificar la subred
   vpc_security_group_ids = [aws_security_group.neo4j_sg.id]
-  subnet_id              = "subnet-00fc94134ef5eba28"
+  subnet_id              = "subnet-03e94c67e8ff11d9a"
 
   tags = {
     Name = "Neo4j-Datamart-Server"
@@ -146,29 +146,7 @@ output "neo4j_public_ip" {
   description = "Public IP address of the Neo4j server"
   value       = aws_instance.neo4j_server.public_ip
 }
-# --- Lambda function for querying Neo4j ---
 
-resource "aws_lambda_function" "movies_query_lambda" {
-  function_name = "movies-query-api"
-  role          = "arn:aws:iam::007357037132:role/lambda-run-role"
-
-  handler     = "org.tscd.query.MovieRequestHandler::handleRequest"
-  runtime     = "java17"
-  timeout     = 30
-  memory_size = 1024
-
-  filename = "./query-handler-1.0-SNAPSHOT.jar"
-  source_code_hash = filebase64sha256("./query-handler-1.0-SNAPSHOT.jar")
-
-  environment {
-    variables = {
-      NEO4J_URI    = "bolt://${aws_instance.neo4j_server.public_ip}:7687"
-      NEO4J_USER   = var.neo4j_user
-      NEO4J_PASSWD = var.neo4j_passwd
-
-    }
-  }
-}
 
 # 1. Cola de mensajes fallidos (Dead Letter Queue)
 resource "aws_sqs_queue" "movies_dlq" {
@@ -205,16 +183,69 @@ resource "aws_instance" "api_server" {
   instance_type = "t2.micro"
   key_name      = "clave-hoy"
 
-  vpc_security_group_ids = [aws_security_group.neo4j_sg.id] # Usamos el mismo SG por ahora
-  subnet_id              = "subnet-00fc94134ef5eba28"
+  vpc_security_group_ids = [aws_security_group.neo4j_sg.id]
+  subnet_id = "subnet-03e94c67e8ff11d9a"
 
   tags = {
     Name = "API-Movie-Server"
   }
-}
 
+  # 1. CONEXIÓN SSH
+  connection {
+    type = "ssh"
+    user = "ubuntu"
+    private_key = file("./clave-hoy.txt")
+    host = self.public_ip
+  }
+
+  # 2. INSTALAR DOCKER (Remote-exec)
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update",
+      "sudo apt-get install -y docker.io",
+      "sudo systemctl start docker",
+      "sudo systemctl enable docker",
+      "sudo usermod -aG docker ubuntu",
+      "mkdir -p ~/app"
+    ]
+  }
+}
   # 2. Output para saber la IP de la nueva API
 output "api_public_ip" {
   value = aws_instance.api_server.public_ip
 }
+# 1. Crear la API Gateway (Tipo HTTP)
+resource "aws_apigatewayv2_api" "api_gateway" {
+  name          = "movies-api-gateway"
+  protocol_type = "HTTP"
+}
 
+# 2. Configurar la Integración con tu EC2
+resource "aws_apigatewayv2_integration" "api_integration" {
+  api_id           = aws_apigatewayv2_api.api_gateway.id
+  integration_type = "HTTP_PROXY"
+
+  # Aquí usamos la IP pública de tu instancia y el puerto 8080
+  integration_uri    = "http://${aws_instance.api_server.public_ip}:8080/{proxy}"
+  integration_method = "ANY"
+  payload_format_version = "1.0"
+}
+
+# 3. Crear la Ruta (Captura todo: /movie, /actor, etc.)
+resource "aws_apigatewayv2_route" "api_route" {
+  api_id    = aws_apigatewayv2_api.api_gateway.id
+  route_key = "ANY /{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.api_integration.id}"
+}
+
+# 4. Desplegar la API (Stage $default para que se publique al instante)
+resource "aws_apigatewayv2_stage" "api_stage" {
+  api_id      = aws_apigatewayv2_api.api_gateway.id
+  name        = "$default"
+  auto_deploy = true
+}
+
+# 5. Output para obtener la URL del Gateway
+output "gateway_url" {
+  value = aws_apigatewayv2_api.api_gateway.api_endpoint
+}
