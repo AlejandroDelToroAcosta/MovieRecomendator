@@ -33,7 +33,7 @@ The platform acts as a **movie information system**. It retrieves movie-related 
 
 The following diagram presents the complete system architecture, showing the decoupled ingestion pipeline and the managed API access layer via API Gateway.
 
-![Architecture Diagram](/documentation/architechture_diagram.drawio.png)
+![Architecture Diagram](/documentation/architechture_diagram.png)
 
 
 
