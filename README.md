@@ -181,7 +181,39 @@ This approach enables a clean separation between infrastructure provisioning (Te
 
 ---
 
-### 5. Future Work
+
+### 5. CI/CD & DevOps
+
+This project follows DevOps best practices by integrating **Continuous Integration (CI)** through **GitHub Actions**, ensuring code quality, test coverage, and build reliability across all modules.
+
+#### Continuous Integration with GitHub Actions
+
+A centralized CI pipeline is configured to automatically trigger on:
+- Push events to `main` and `develop` branches
+- Pull Requests targeting `main` and `develop`
+- Manual execution via `workflow_dispatch` with custom inputs
+
+The pipeline is responsible for:
+- Checking out the repository
+- Setting up the Java environment
+- Building all Maven modules
+- Executing unit tests written with **JUnit**
+- Generating and collecting test coverage reports using **JaCoCo**
+
+Each module in the project includes its own unit tests, ensuring correctness and regression prevention across ingestion, processing, and API layers.
+
+#### Test Coverage with JaCoCo
+
+JaCoCo is integrated into the Maven lifecycle and executed during the `verify` phase. After the build:
+- Coverage reports are generated for each module
+- Reports are uploaded as build artifacts for inspection and traceability
+
+This guarantees visibility into code quality and enforces testing as a first-class citizen of the development process.
+
+The workflow is specified in ci.yaml file.
+  
+---
+### 6. Future Work
 
 Several improvements and extensions are planned to further evolve the architecture and align it with a more cloud-native and serverless approach:
 
